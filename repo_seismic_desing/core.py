@@ -25,12 +25,15 @@ class Simple_free_motion():
         to = self.to
         dt = self.dt
         tf = self.tf
-        x = []
-        ti = []
+        x = np.zeros((int((tf-to)/dt), 1))
+        ti = np.zeros((len(x), 1))
+
+        j = 0
         for t in np.arange(to,tf, dt):
-            x.append(xo * np.cos(w*t) + xvo / w * np.sin(w*t))
-            ti.append(t)
-        
+            x[j] = xo * np.cos(w*t) + xvo / w * np.sin(w*t)
+            ti[j] = t
+            j = j+1
+
         x_df = pd.DataFrame(x, columns= ['Amplitude'])
         ti_df = pd.DataFrame(ti, columns= ['Time'])
         resul = pd.concat([ti_df, x_df], axis=1, ignore_index=False)
