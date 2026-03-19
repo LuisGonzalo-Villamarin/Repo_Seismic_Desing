@@ -34,11 +34,6 @@ class Simple_free_motion():
             ti[j] = t
             j = j+1
 
-        # x_df = pd.DataFrame(x, columns= ['Amplitude'])
-        # ti_df = pd.DataFrame(ti, columns= ['Time'])
-        # resul = pd.concat([ti_df, x_df], axis=1, ignore_index=False)
-        
-        # return x, ti, resul
         return x, ti
 
 #########################################################################################################################################
