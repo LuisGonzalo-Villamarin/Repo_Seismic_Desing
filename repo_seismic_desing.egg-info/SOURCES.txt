@@ -6,5 +6,4 @@ repo_seismic_desing/core_simple_class_DS.py
 repo_seismic_desing.egg-info/PKG-INFO
 repo_seismic_desing.egg-info/SOURCES.txt
 repo_seismic_desing.egg-info/dependency_links.txt
-repo_seismic_desing.egg-info/requires.txt
 repo_seismic_desing.egg-info/top_level.txt

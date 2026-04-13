@@ -64,3 +64,40 @@ class plt_amp_tim():
         ax.set_xlim(ti[0], ti[-1])
         plt.show()
         
+#########################################################################################################################################
+#########################################################################################################################################
+################################# Simple CLASS for SDOF system in free vibration (Sub Damping) ##########################################
+#########################################################################################################################################
+#########################################################################################################################################
+
+class Simple_free_motion_sub_damping():
+    def __init__(self,T = 0.1, xo = 1.0, xvo = 0.0, zi = 0.05, to = 0, tf = 5.0, dt = 0.001):
+        self.T = T
+        self.xo = xo
+        self.xvo = xvo
+        self.zi = zi
+        self.to = to
+        self.tf = tf
+        self.dt = dt
+    
+    def sim_free_sdof_SubDamping(self):
+        T = self.T
+        xo = self.xo
+        xvo = self.xvo
+        zi = self.zi
+        to = self.to
+        tf = self.tf
+        dt = self.dt
+        
+        w = (2 * np.pi)/T
+        xsub = np.zeros(int(tf/dt + 1))
+        ti = np.zeros(int(tf/dt + 1))
+        wsub = w * np.sqrt(1 - zi**2)
+        j = 0
+        for t in np.arange(to,tf + dt,dt):
+            xsub[j] = np.exp(-zi*w*t)*(xo*np.cos(wsub*t) + (xvo + zi*w*xo)/(wsub)*np.sin(wsub*t))
+            ti[j] = t
+            j = j+1
+        
+        return xsub, ti
+        
