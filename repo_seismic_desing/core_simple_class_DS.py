@@ -106,3 +106,101 @@ class Simple_free_motion_sub_damping():
         
         return xsub, ti
         
+#########################################################################################################################################
+#########################################################################################################################################
+############################################ Response step by step (B-Newmark [Jr]) #####################################################
+#########################################################################################################################################
+#########################################################################################################################################
+
+class Step_by_Step_BNewmark():
+    
+    def __init__(self, T= 1.0, M = 1.0, zi = 0.05, accel_record = any, vector_time = any,
+                 colorSeism = (0.5,0.5,0.5), colorRaccel = (0,0,1),colorRTaccel = (1,0,0)):
+        self.T = T
+        self.M = M
+        self.zi = zi
+        self.SG = accel_record 
+        self.TI = vector_time
+        self.colorSeism = colorSeism
+        self.colorRaccel = colorRaccel
+        self.colorRTaccel = colorRTaccel
+        
+    
+    def Bnewmark_Jr(self):
+        T = self.T
+        M = self.M
+        zi = self.zi
+        SG = self.SG
+        TI = self.TI
+        
+        dt = TI[1] - TI[0]
+        
+        w = (2*np.pi)/T
+        k = ((2*np.pi)/T)**(2)*M
+        xo = 0
+        xvo = 0
+
+        xvn = xvo
+        xn = xo
+        xao = (-SG[0] * M - 2*zi*w*M*xvo -w**(2)*xo) * 1/M
+
+        print(len(SG))
+
+        xn1 = np.zeros(len(SG))
+        xvn1 = np.zeros(len(SG))
+        xan1 = np.zeros(len(SG))
+        at = np.zeros(len(SG))
+
+        xan = xao
+
+        xan1[0] = xao
+        xvn1[0] = xvo
+        xn1[0] = xo  
+
+        for i in np.arange(1, len(SG),1):
+            xn1[i] = xn + dt*xvn + (dt**2)/2*xan
+            xan1[i] = 1 / (M + (1/2)*(2*zi*w*M*dt)) * (-SG[i]*M - k*xn1[i] - 2*zi*w*M*(xvn + dt*(1 - 1/2)*xan))
+            xvn1[i] = xvn + dt*((1-1/2)*xan + (1/2)*xan1[i])
+            at[i] = SG[i] + xan1[i]
+            
+            xan = xan1[i]
+            xvn = xvn1[i]
+            xn = xn1[i]
+        
+        return at, xan1, xvn1, xn1  
+    
+    def plot_seis_Raccel(self, xan1, at):
+        TI = self.TI
+        SG = self.SG
+        colorSeism = self.colorSeism
+        colorRaccel = self.colorRaccel
+        colorRTaccel = self.colorRTaccel
+        
+        fig, ax = plt.subplots(2,1, figsize = (20,10))
+        ax[0].plot(TI, SG, color = colorSeism, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
+                markersize = 0, label = 'Seismic Record')
+        ax[0].set_ylabel('Acceleration [g]')
+        ax[0].set_xlabel('Time [s]')
+        ax[0].grid(visible= True, axis= 'x')
+        ax[0].set_xlim(TI[0], TI[-1])
+        
+        ax[1].plot(TI, SG, color = colorSeism, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
+                markersize = 0, label = 'Seismic Record')
+        ax[1].plot(TI, xan1, color = colorRaccel, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
+                markersize = 0, label = 'Acceleration Response')
+        ax[1].plot(TI, at, color = colorRTaccel, alpha = 1.0 ,lw = 1.0, ls = '--', marker = 'o', 
+                markersize = 0, label = 'Total Acceleration Response')
+        ax[1].set_ylabel('Acceleration [g]')
+        ax[1].set_xlabel('Time [s]')
+        ax[1].grid(visible= True, axis= 'x')
+        ax[1].set_xlim(TI[0], TI[-1])
+        ax[1].legend(loc='best')
+        
+        plt.show()        
+            
+            
+            
+            
+        
+          
+    
