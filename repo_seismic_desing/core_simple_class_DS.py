@@ -115,7 +115,7 @@ class Simple_free_motion_sub_damping():
 class Step_by_Step_BNewmark():
     
     def __init__(self, T= 1.0, M = 1.0, zi = 0.05, accel_record = any, vector_time = any,
-                 colorSeism = (0.5,0.5,0.5), colorRaccel = (0,0,1),colorRTaccel = (1,0,0)):
+                 colorSeism = (0.5,0.5,0.5), colorRaccel = (0,0,1),colorRTaccel = (1,0,0), title = 'Record'):
         self.T = T
         self.M = M
         self.zi = zi
@@ -124,6 +124,7 @@ class Step_by_Step_BNewmark():
         self.colorSeism = colorSeism
         self.colorRaccel = colorRaccel
         self.colorRTaccel = colorRTaccel
+        self.title = title
         
     
     def Bnewmark_Jr(self):
@@ -177,13 +178,17 @@ class Step_by_Step_BNewmark():
         colorSeism = self.colorSeism
         colorRaccel = self.colorRaccel
         colorRTaccel = self.colorRTaccel
+        title = self.title
         
+        #----------Max Sg------------#
         maxSG = np.max(np.abs(SG))
         TI_maxSG = TI[np.argmax(np.abs(SG))]
-        
+        #----------Max AT------------#
         maxAT = np.max(np.abs(at))
         TI_maxAT = TI[np.argmax(np.abs(at))]
-        
+        #----------Eta------------#
+        n = maxAT / maxSG
+        #----------Plot------------#
         fig, ax = plt.subplots(2,1, figsize = (20,10))
         fig.suptitle(f"B-Newmark, Solver", fontsize=18, color = (0,0,1), y=0.98)
         
@@ -191,7 +196,7 @@ class Step_by_Step_BNewmark():
                 markersize = 0, label = 'Seismic Record')
         ax[0].plot(TI_maxSG, SG[np.argmax(np.abs(SG))], color = colorSeism, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
                 markersize = 5, label = f'PGA = {maxSG:.4f} [g], t = {TI_maxSG:.4f} [s]')
-        ax[0].set_title('Seismic Record')
+        ax[0].set_title('REC =' + ' '+ title, fontweight = 'bold')
         ax[0].set_ylabel('Acceleration [g]')
         ax[0].set_xlabel('Time [s]')
         ax[0].grid(visible= True, axis= 'x')
@@ -205,16 +210,153 @@ class Step_by_Step_BNewmark():
         ax[1].plot(TI, at, color = colorRTaccel, alpha = 1.0 ,lw = 1.0, ls = '--', marker = 'o', 
                 markersize = 0, label = 'Total Acceleration Response')
         ax[1].plot(TI_maxAT, at[np.argmax(np.abs(at))], color = colorRTaccel, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
-                markersize = 5, label = f'maxAT = {maxAT:.4f} [g], t = {TI_maxAT:.4f} [s]')
-        ax[1].set_title(f'Acceleration Response, T = {T:.2f} [s], zi = {zi * 100:.2f} [%]')
+                markersize = 5, label = f'maxAT = {maxAT:.4f} [g], t = {TI_maxAT:.4f} [s] / n = {n:.2f}')
+        ax[1].set_title(f'Acceleration Response, T = {T:.2f} [s], zi = {zi * 100:.2f} [%]', fontweight = 'bold')
         ax[1].set_ylabel('Acceleration [g]')
         ax[1].set_xlabel('Time [s]')
         ax[1].grid(visible= True, axis= 'x')
         ax[1].set_xlim(TI[0], TI[-1])
         ax[1].legend(loc='best')
         
+        plt.tight_layout()
         plt.show()        
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+########################################## Response Spectrum using (B-Newmark [Jr]) #####################################################
+#########################################################################################################################################
+#########################################################################################################################################
+
+class SPEC_BNewmark():
+    
+    def __init__(self, To = 0.10, dT = 0.01, Tf = 4.0, M = 1.0, zi = 0.05, accel_record = any, vector_time = any,
+                 colorSeism = (0.5,0.5,0.5), colorRaccel = (0,0,1),colorRTaccel = (1,0,0), title = 'Record'):
+        self.To = To
+        self.dT = dT
+        self.Tf = Tf
+        self.M = M
+        self.zi = zi
+        self.SG = accel_record 
+        self.TI = vector_time
+        self.colorSeism = colorSeism
+        self.colorRaccel = colorRaccel
+        self.colorRTaccel = colorRTaccel
+        self.title = title
+        
+    
+    def Spec_Bnewmark_Jr(self):
+        To = self.To
+        dT = self.dT
+        Tf = self.Tf
+        M = self.M
+        zi = self.zi
+        SG = self.SG
+        TI = self.TI
+        
+        dt = TI[1] - TI[0]
+        
+        Sa = np.zeros(int((Tf - To) / dT))
+        Ti = np.zeros(int((Tf - To) / dT))
+        d = 0
+        
+        for T in np.arange(To, Tf, dT):        
+            w = (2*np.pi)/T
+            k = ((2*np.pi)/T)**(2)*M
+            xo = 0
+            xvo = 0
+
+            xvn = xvo
+            xn = xo
+            xao = (-SG[0] * M - 2*zi*w*M*xvo -w**(2)*xo) * 1/M
+
+            xn1 = np.zeros(len(SG))
+            xvn1 = np.zeros(len(SG))
+            xan1 = np.zeros(len(SG))
+            at = np.zeros(len(SG))
+
+            xan = xao
+
+            xan1[0] = xao
+            xvn1[0] = xvo
+            xn1[0] = xo  
+
+            for i in np.arange(1, len(SG),1):
+                xn1[i] = xn + dt*xvn + (dt**2)/2*xan
+                xan1[i] = 1 / (M + (1/2)*(2*zi*w*M*dt)) * (-SG[i]*M - k*xn1[i] - 2*zi*w*M*(xvn + dt*(1 - 1/2)*xan))
+                xvn1[i] = xvn + dt*((1-1/2)*xan + (1/2)*xan1[i])
+                at[i] = SG[i] + xan1[i]
+                
+                xan = xan1[i]
+                xvn = xvn1[i]
+                xn = xn1[i]
             
+            Sa[d] = np.max(np.abs(at))
+            Ti[d] = T
+            d = d + 1
+            
+        return Sa, Ti
+
+        
+        
+        
+        
+        
+        
+        
+    # def plot_seis_Raccel(self, xan1, at):
+    #     TI = self.TI
+    #     SG = self.SG
+    #     T = self.T
+    #     zi = self.zi
+    #     colorSeism = self.colorSeism
+    #     colorRaccel = self.colorRaccel
+    #     colorRTaccel = self.colorRTaccel
+    #     title = self.title
+        
+    #     #----------Max Sg------------#
+    #     maxSG = np.max(np.abs(SG))
+    #     TI_maxSG = TI[np.argmax(np.abs(SG))]
+    #     #----------Max AT------------#
+    #     maxAT = np.max(np.abs(at))
+    #     TI_maxAT = TI[np.argmax(np.abs(at))]
+    #     #----------Eta------------#
+    #     n = maxAT / maxSG
+        
+        
+        
+    # #----------Plot------------#
+    # fig, ax = plt.subplots(2,1, figsize = (20,10))
+    # fig.suptitle(f"B-Newmark, Solver", fontsize=18, color = (0,0,1), y=0.98)
+    
+    # ax[0].plot(TI, SG, color = colorSeism, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
+    #         markersize = 0, label = 'Seismic Record')
+    # ax[0].plot(TI_maxSG, SG[np.argmax(np.abs(SG))], color = colorSeism, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
+    #         markersize = 5, label = f'PGA = {maxSG:.4f} [g], t = {TI_maxSG:.4f} [s]')
+    # ax[0].set_title('REC =' + ' '+ title, fontweight = 'bold')
+    # ax[0].set_ylabel('Acceleration [g]')
+    # ax[0].set_xlabel('Time [s]')
+    # ax[0].grid(visible= True, axis= 'x')
+    # ax[0].set_xlim(TI[0], TI[-1])
+    # ax[0].legend(loc='best')
+    
+    # ax[1].plot(TI, SG, color = colorSeism, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
+    #         markersize = 0, label = 'Seismic Record')
+    # ax[1].plot(TI, xan1, color = colorRaccel, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
+    #         markersize = 0, label = 'Acceleration Response')
+    # ax[1].plot(TI, at, color = colorRTaccel, alpha = 1.0 ,lw = 1.0, ls = '--', marker = 'o', 
+    #         markersize = 0, label = 'Total Acceleration Response')
+    # ax[1].plot(TI_maxAT, at[np.argmax(np.abs(at))], color = colorRTaccel, alpha = 1.0 ,lw = 1.0, ls = '-', marker = 'o', 
+    #         markersize = 5, label = f'maxAT = {maxAT:.4f} [g], t = {TI_maxAT:.4f} [s] / n = {n:.2f}')
+    # ax[1].set_title(f'Acceleration Response, T = {T:.2f} [s], zi = {zi * 100:.2f} [%]', fontweight = 'bold')
+    # ax[1].set_ylabel('Acceleration [g]')
+    # ax[1].set_xlabel('Time [s]')
+    # ax[1].grid(visible= True, axis= 'x')
+    # ax[1].set_xlim(TI[0], TI[-1])
+    # ax[1].legend(loc='best')
+    
+    # plt.tight_layout()
+    # plt.show()      
             
             
             
