@@ -742,9 +742,9 @@ class SpecNec2024_Sae_Sai_modal():
             markeredgewidth=1, linewidth=1.0, alpha=1.0,linestyle = '--')
             ax1.plot([TieF[u]], [SaiF[u]], color=(1, 0.5, 0.5), marker='o', markersize=3, markerfacecolor= (1, 0, 0),                              
             markeredgewidth=1, linewidth=1.0, alpha=1.0,linestyle = '--')
-            ax1.text(TieF[u] + 0.02, SaeF[u] - 0.01, f'Sae = {SaeF[u]:.3f} g', fontsize= 7, verticalalignment='top', horizontalalignment='left', color = (1, 0, 0), rotation=90)
-            ax1.text(TieF[u] + 0.02, SaiF[u] + 0.01, f'Sai = {SaiF[u]:.3f} g', fontsize= 7, verticalalignment='bottom', horizontalalignment='left', color = (1, 0, 0), rotation=90)
-            ax1.text(TieF[u] + 0.02, 0 + 0.01, f'T = {TieF[u]:.3f} s', fontsize= 7, verticalalignment='top', horizontalalignment='left', color = (1, 0, 0), rotation=90)
+            ax1.text(TieF[u] + 0.02, SaeF[u] - 0.01, f'Sae = {SaeF[u]:.3f} g', fontsize= 10, verticalalignment='top', horizontalalignment='left', color = (1, 0, 0), rotation=90)
+            ax1.text(TieF[u] + 0.02, SaiF[u] + 0.01, f'Sai = {SaiF[u]:.3f} g', fontsize= 10, verticalalignment='bottom', horizontalalignment='left', color = (1, 0, 0), rotation=90)
+            ax1.text(TieF[u] + 0.02, 0 + 0.01, f'T = {TieF[u]:.3f} s', fontsize= 10, verticalalignment='top', horizontalalignment='left', color = (1, 0, 0), rotation=90)
 
 
         ax1.text(0.3, Sds + 0.01, f'Sds = {Sds:.3f} g', fontsize=10, verticalalignment='bottom', horizontalalignment='left')
